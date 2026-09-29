@@ -96,6 +96,7 @@ const MainLayout = () => {
         onClose={() => setIsPracticeModalOpen(false)}
         skills={skills}
         defaultSkillId={practiceDefaultSkillId}
+        onSkillCreated={fetchSkillsForModal}
         onPracticeLogged={() => {
           fetchSkillsForModal();
           // Trigger refresh of active page if needed

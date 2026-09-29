@@ -39,6 +39,20 @@ export const GoalsPage = () => {
     }
   };
 
+  const handleLoadStarterPack = async () => {
+    try {
+      setSubmitting(true);
+      const res = await api.post('/api/skills/starter-pack');
+      if (res.success) {
+        await fetchGoalsAndSkills();
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to seed starter pack');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     fetchGoalsAndSkills();
   }, []);
@@ -177,6 +191,19 @@ export const GoalsPage = () => {
 
             <form onSubmit={handleCreateGoal} className="p-6 space-y-4">
               {error && <div className="p-2.5 rounded bg-rose-500/10 text-rose-400 text-xs border border-rose-500/30">{error}</div>}
+
+              {skills.length === 0 && (
+                <div className="p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-xs text-indigo-300 flex items-center justify-between">
+                  <span>No hobbies in your portfolio yet!</span>
+                  <button
+                    type="button"
+                    onClick={handleLoadStarterPack}
+                    className="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px]"
+                  >
+                    ⚡ Load Starters
+                  </button>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Target Skill *</label>

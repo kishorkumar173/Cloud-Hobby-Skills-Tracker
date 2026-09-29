@@ -226,3 +226,38 @@ def delete_skill(
     db.delete(skill)
     db.commit()
     return success_response(message="Skill deleted successfully")
+
+@router.post("/starter-pack")
+def seed_starter_pack(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Seeds recommended starter hobbies/skills for the authenticated user."""
+    starters = [
+        ("Python & Cloud Coding", "Coding", "Mastering Python APIs, microservices, and cloud computing deployment."),
+        ("Acoustic Guitar", "Music", "Learning chords, fretboard basics, fingerpicking, and daily practice."),
+        ("Digital Photography", "Photography", "Exploring manual camera settings, framing, composition, and photo editing.")
+    ]
+    created = []
+    for name, cat, desc in starters:
+        existing = db.query(Skill).filter(
+            Skill.user_id == current_user.user_id,
+            Skill.skill_name.ilike(name)
+        ).first()
+        if not existing:
+            s = Skill(
+                user_id=current_user.user_id,
+                skill_name=name,
+                category=cat,
+                current_level="BEGINNER",
+                target_level="ADVANCED",
+                description=desc
+            )
+            db.add(s)
+            created.append(name)
+    db.commit()
+    return success_response(
+        data={"added": created},
+        message=f"Added {len(created)} starter hobbies to your portfolio!"
+    )
+

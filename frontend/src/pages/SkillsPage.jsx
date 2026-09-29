@@ -24,6 +24,15 @@ const categories = [
   'Other'
 ];
 
+const popularStarters = [
+  { name: 'Python & Cloud Coding', category: 'Coding', icon: '💻', desc: 'Mastering Python APIs and cloud computing architecture.' },
+  { name: 'Acoustic Guitar', category: 'Music', icon: '🎸', desc: 'Fingerstyle guitar, chord transitions, and rhythm.' },
+  { name: 'Digital Photography', category: 'Photography', icon: '📷', desc: 'Framing, lighting, and camera exposure controls.' },
+  { name: 'Fitness & Gym Workout', category: 'Fitness', icon: '🏋️', desc: 'Strength training, calisthenics, and progressive overload.' },
+  { name: 'Digital Art & Painting', category: 'Art', icon: '🎨', desc: 'Color theory, digital illustration, and concept art.' },
+  { name: 'Cooking & Culinary', category: 'Cooking', icon: '🍳', desc: 'Knife skills, flavor profiles, and international cuisines.' }
+];
+
 export const SkillsPage = ({ onOpenPracticeModal }) => {
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +49,46 @@ export const SkillsPage = ({ onOpenPracticeModal }) => {
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  const handleQuickAddStarter = async (starter) => {
+    try {
+      setSubmitting(true);
+      const res = await api.post('/api/skills', {
+        skill_name: starter.name,
+        category: starter.category,
+        current_level: 'BEGINNER',
+        target_level: 'ADVANCED',
+        description: starter.desc
+      });
+      if (res.success) {
+        await fetchSkills();
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to add hobby');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleLoadStarterPack = async () => {
+    try {
+      setSubmitting(true);
+      const res = await api.post('/api/skills/starter-pack');
+      if (res.success) {
+        await fetchSkills();
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to seed starter pack');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleApplyPreset = (starter) => {
+    setName(starter.name);
+    setCategory(starter.category);
+    setDescription(starter.desc);
+  };
 
   const fetchSkills = async () => {
     try {
@@ -176,21 +225,66 @@ export const SkillsPage = ({ onOpenPracticeModal }) => {
       {loading ? (
         <div className="text-center py-12 text-xs text-slate-500">Loading your skills...</div>
       ) : filteredSkills.length === 0 ? (
-        <div className="glass-panel p-12 text-center max-w-md mx-auto">
-          <Sparkles className="w-10 h-10 text-indigo-400 mx-auto mb-3" />
-          <h4 className="text-base font-bold text-white">No Skills Found</h4>
-          <p className="text-xs text-slate-400 mt-1">
-            {searchQuery || selectedCategory !== 'All' 
-              ? 'Try adjusting your search query or filter category.' 
-              : 'Start your cloud tracking journey by adding your first skill!'}
-          </p>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="mt-4 px-4 py-2 rounded-xl gradient-purple-pink text-white text-xs font-bold"
-          >
-            + Add Your First Skill
-          </button>
-        </div>
+        searchQuery || selectedCategory !== 'All' ? (
+          <div className="glass-panel p-12 text-center max-w-md mx-auto">
+            <Sparkles className="w-10 h-10 text-indigo-400 mx-auto mb-3" />
+            <h4 className="text-base font-bold text-white">No Skills Found</h4>
+            <p className="text-xs text-slate-400 mt-1">
+              Try adjusting your search query or filter category.
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedCategory('All');
+              }}
+              className="mt-4 px-4 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700"
+            >
+              Clear Filters
+            </button>
+          </div>
+        ) : (
+          <div className="glass-panel p-8 text-center max-w-2xl mx-auto space-y-5 border-dashed border-indigo-500/40">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
+              <Sparkles className="w-7 h-7" />
+            </div>
+            <div>
+              <h4 className="text-lg font-bold text-white">Your Hobby Portfolio is Ready!</h4>
+              <p className="text-xs text-slate-400 mt-1.5 max-w-md mx-auto leading-relaxed">
+                Click any popular starter hobby below to add it in 1 click, or load our curated starter pack:
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 text-left">
+              {popularStarters.map((starter) => (
+                <button
+                  key={starter.name}
+                  onClick={() => handleQuickAddStarter(starter)}
+                  className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/60 hover:bg-indigo-950/30 transition-all group active:scale-95"
+                >
+                  <span className="text-2xl mb-1 block group-hover:scale-110 transition-transform">{starter.icon}</span>
+                  <div className="font-bold text-xs text-white group-hover:text-indigo-300 truncate">{starter.name}</div>
+                  <div className="text-[10px] text-slate-500 font-semibold uppercase mt-0.5">{starter.category}</div>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-3 border-t border-slate-800/80">
+              <button
+                onClick={handleLoadStarterPack}
+                className="px-5 py-2.5 rounded-xl gradient-purple-pink text-white text-xs font-bold shadow-lg shadow-indigo-500/25 hover:brightness-110 active:scale-95 flex items-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>⚡ Load Starter Pack (3 Skills)</span>
+              </button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all"
+              >
+                + Add Custom Skill
+              </button>
+            </div>
+          </div>
+        )
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredSkills.map((skill) => (
@@ -218,6 +312,26 @@ export const SkillsPage = ({ onOpenPracticeModal }) => {
 
             <form onSubmit={handleCreateSkill} className="p-6 space-y-4">
               {error && <div className="p-2.5 rounded bg-rose-500/10 text-rose-400 text-xs border border-rose-500/30">{error}</div>}
+
+              {/* Quick Presets */}
+              <div>
+                <span className="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">
+                  Popular Presets (1-Click Fill)
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {popularStarters.map((p) => (
+                    <button
+                      key={p.name}
+                      type="button"
+                      onClick={() => handleApplyPreset(p)}
+                      className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-indigo-500 hover:text-indigo-300 text-[11px] text-slate-300 transition-colors flex items-center gap-1"
+                    >
+                      <span>{p.icon}</span>
+                      <span>{p.name.split(' ')[0]}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Skill Name *</label>

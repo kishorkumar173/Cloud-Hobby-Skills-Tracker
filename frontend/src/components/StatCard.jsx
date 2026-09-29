@@ -1,8 +1,11 @@
 import React from 'react';
 
-export const StatCard = ({ title, value, unit = '', subtext, icon: Icon, gradient = 'gradient-purple-pink', badge }) => {
+export const StatCard = ({ title, value, unit = '', subtext, icon: Icon, gradient = 'gradient-purple-pink', badge, onClick }) => {
   return (
-    <div className="glass-panel p-5 relative overflow-hidden group">
+    <div 
+      onClick={onClick}
+      className={`glass-panel p-5 relative overflow-hidden group ${onClick ? 'cursor-pointer hover:border-indigo-500/50 hover:scale-[1.01] transition-all' : ''}`}
+    >
       {/* Background glow circle */}
       <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full opacity-20 blur-xl ${gradient}`} />
 

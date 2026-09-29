@@ -70,14 +70,25 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenPracticeModal }) => {
         </div>
 
         {/* Right Action Bar */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {/* Quick Add Skill Shortcut */}
+          <button
+            onClick={() => setActiveTab('skills')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-700/80 hover:border-indigo-500 text-slate-200 text-xs font-bold hover:text-white transition-all shadow-sm"
+            title="Add or manage your hobbies and skills"
+          >
+            <Award className="w-4 h-4 text-indigo-400" />
+            <span className="hidden sm:inline">Skills & Hobbies</span>
+          </button>
+
           {/* Quick Log Practice Button */}
           <button
             onClick={onOpenPracticeModal}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl gradient-emerald-teal text-white text-xs font-bold shadow-md shadow-emerald-500/25 hover:brightness-110 active:scale-95 transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl gradient-emerald-teal text-white text-xs font-bold shadow-md shadow-emerald-500/25 hover:brightness-110 active:scale-95 transition-all"
+            title="Log a new practice session"
           >
             <PlusCircle className="w-4 h-4" />
-            <span className="hidden sm:inline">Log Practice</span>
+            <span>Log Practice</span>
           </button>
 
           {/* User profile & Logout */}
@@ -104,7 +115,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenPracticeModal }) => {
       </div>
 
       {/* Mobile Nav Scroller */}
-      <div className="flex md:hidden items-center gap-2 overflow-x-auto pt-3 pb-1 border-t border-slate-800/60 mt-2.5">
+      <div className="flex md:hidden items-center gap-2 overflow-x-auto pt-3 pb-1 border-t border-slate-800/60 mt-2.5 scrollbar-thin">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -112,13 +123,13 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenPracticeModal }) => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs whitespace-nowrap font-bold transition-all shadow-sm ${
                 isActive 
-                  ? 'bg-indigo-600 text-white' 
-                  : 'text-slate-400 bg-slate-900 border border-slate-800'
+                  ? 'gradient-purple-pink text-white shadow-indigo-500/30' 
+                  : 'text-slate-300 bg-slate-900 border border-slate-800 hover:text-white'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-4 h-4" />
               {item.label}
             </button>
           );

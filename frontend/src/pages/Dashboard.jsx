@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import { StatCard } from '../components/StatCard';
 import { StreakBadge } from '../components/StreakBadge';
+import { SkillCard } from '../components/SkillCard';
 import { WeeklyTrendChart, SkillDistributionChart, BadgesShowcase } from '../components/AnalyticsCharts';
 import { GoalTracker } from '../components/GoalTracker';
 import { 
@@ -14,21 +15,41 @@ import {
   Heart, 
   MessageSquare,
   PlusCircle,
+  Plus,
   Calendar,
-  Cloud
+  Cloud,
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
+
+const popularStarters = [
+  { name: 'Python & Cloud Coding', category: 'Coding', icon: '💻' },
+  { name: 'Acoustic Guitar', category: 'Music', icon: '🎸' },
+  { name: 'Digital Photography', category: 'Photography', icon: '📷' },
+  { name: 'Fitness & Gym Workout', category: 'Fitness', icon: '🏋️' },
+  { name: 'Digital Art & Painting', category: 'Art', icon: '🎨' },
+  { name: 'Cooking & Culinary', category: 'Cooking', icon: '🍳' }
+];
 
 export const Dashboard = ({ onNavigate, onOpenPracticeModal }) => {
   const { user } = useAuth();
   const [analytics, setAnalytics] = useState(null);
+  const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [addingStarter, setAddingStarter] = useState(false);
 
-  const fetchAnalytics = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const res = await api.get('/api/analytics/dashboard');
-      if (res.success) {
-        setAnalytics(res.data);
+      const [analyticsRes, skillsRes] = await Promise.all([
+        api.get('/api/analytics/dashboard'),
+        api.get('/api/skills')
+      ]);
+      if (analyticsRes.success) {
+        setAnalytics(analyticsRes.data);
+      }
+      if (skillsRes.success) {
+        setSkills(skillsRes.data || []);
       }
     } catch (err) {
       setError(err.message || 'Failed to load cloud analytics');
@@ -38,14 +59,48 @@ export const Dashboard = ({ onNavigate, onOpenPracticeModal }) => {
   };
 
   useEffect(() => {
-    fetchAnalytics();
+    fetchDashboardData();
   }, []);
+
+  const handleQuickAddStarter = async (starter) => {
+    try {
+      setAddingStarter(true);
+      const res = await api.post('/api/skills', {
+        skill_name: starter.name,
+        category: starter.category,
+        current_level: 'BEGINNER',
+        target_level: 'ADVANCED',
+        description: `Practicing and advancing skills in ${starter.name}.`
+      });
+      if (res.success) {
+        await fetchDashboardData();
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to add hobby');
+    } finally {
+      setAddingStarter(false);
+    }
+  };
+
+  const handleLoadStarterPack = async () => {
+    try {
+      setAddingStarter(true);
+      const res = await api.post('/api/skills/starter-pack');
+      if (res.success) {
+        await fetchDashboardData();
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to load starter pack');
+    } finally {
+      setAddingStarter(false);
+    }
+  };
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <div className="w-12 h-12 rounded-full border-4 border-indigo-500/30 border-t-indigo-500 animate-spin mb-4" />
-        <p className="text-sm font-semibold text-slate-400">Loading Cloud Analytics...</p>
+        <p className="text-sm font-semibold text-slate-400">Loading Cloud Analytics & Portfolio...</p>
       </div>
     );
   }
@@ -100,7 +155,7 @@ export const Dashboard = ({ onNavigate, onOpenPracticeModal }) => {
         longestStreak={analytics?.longest_streak || 0} 
       />
 
-      {/* 5 KPI Metric Cards */}
+      {/* 4 KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         <StatCard
@@ -115,12 +170,13 @@ export const Dashboard = ({ onNavigate, onOpenPracticeModal }) => {
 
         <StatCard
           title="Active Disciplines"
-          value={analytics?.active_skills_count || 0}
+          value={analytics?.active_skills_count || skills.length || 0}
           unit="skills"
-          subtext={`Top: ${analytics?.most_practiced_skill || 'None'}`}
+          subtext="Click to view & manage"
           icon={Award}
           gradient="gradient-blue-cyan"
-          badge={{ label: 'Completed', text: `${analytics?.completed_skills_count || 0}`, color: 'bg-cyan-500/20 text-cyan-300' }}
+          badge={{ label: 'Manage', text: 'View All →', color: 'bg-cyan-500/20 text-cyan-300' }}
+          onClick={() => onNavigate('skills')}
         />
 
         <StatCard
@@ -131,6 +187,7 @@ export const Dashboard = ({ onNavigate, onOpenPracticeModal }) => {
           icon={Target}
           gradient="gradient-emerald-teal"
           badge={{ label: 'Milestones', text: `${analytics?.milestones_achieved || 0} achieved`, color: 'bg-emerald-500/20 text-emerald-300' }}
+          onClick={() => onNavigate('goals')}
         />
 
         <StatCard
@@ -141,8 +198,96 @@ export const Dashboard = ({ onNavigate, onOpenPracticeModal }) => {
           icon={Heart}
           gradient="gradient-amber-flame"
           badge={{ label: 'Comments', text: `${analytics?.comments_received || 0}`, color: 'bg-amber-500/20 text-amber-300' }}
+          onClick={() => onNavigate('community')}
         />
 
+      </div>
+
+      {/* MY HOBBIES & SKILLS SECTION */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-black text-white flex items-center gap-2">
+              <Award className="w-5 h-5 text-indigo-400" />
+              My Hobbies & Skills Portfolio
+            </h3>
+            <p className="text-xs text-slate-400">
+              Click any card to explore details, or tap <span className="text-emerald-400 font-semibold">+ Practice</span> to record time.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onNavigate('skills')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-bold text-indigo-400 hover:text-indigo-300 hover:border-indigo-500/50 transition-all"
+            >
+              <span>+ Add / View All ({skills.length})</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {skills.length === 0 ? (
+          /* Empty state with 1-click starter chips */
+          <div className="glass-panel p-6 border-dashed border-indigo-500/40 text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-white">You haven't added any hobbies or skills yet!</h4>
+              <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                Pick a popular hobby below to add it in 1 second, or load the recommended starter pack to begin tracking immediately:
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 max-w-3xl mx-auto pt-1">
+              {popularStarters.map((starter) => (
+                <button
+                  key={starter.name}
+                  disabled={addingStarter}
+                  onClick={() => handleQuickAddStarter(starter)}
+                  className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500 hover:bg-indigo-950/30 transition-all group active:scale-95"
+                  title={`Add ${starter.name}`}
+                >
+                  <span className="text-2xl mb-1.5 group-hover:scale-110 transition-transform">{starter.icon}</span>
+                  <span className="text-xs font-bold text-white group-hover:text-indigo-300 text-center leading-tight line-clamp-2">
+                    {starter.name}
+                  </span>
+                  <span className="text-[10px] text-slate-500 uppercase mt-1 font-semibold">{starter.category}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                disabled={addingStarter}
+                onClick={handleLoadStarterPack}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl gradient-purple-pink text-white text-xs font-bold shadow-md shadow-indigo-500/20 hover:brightness-110 active:scale-95"
+              >
+                {addingStarter ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                <span>⚡ Load Starter Pack (3 Skills)</span>
+              </button>
+
+              <button
+                onClick={() => onNavigate('skills')}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-all"
+              >
+                + Create Custom Skill
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {skills.slice(0, 3).map((skill) => (
+              <SkillCard
+                key={skill.skill_id}
+                skill={skill}
+                onLogPractice={() => onOpenPracticeModal(skill.skill_id)}
+                onViewDetails={() => onNavigate('skills')}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 2-Column Analytics Charts */}

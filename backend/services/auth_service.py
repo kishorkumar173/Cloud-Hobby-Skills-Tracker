@@ -40,6 +40,38 @@ class AuthService:
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
+
+        # Auto-seed starter skills for new user so they never have an empty profile
+        from backend.models.skill import Skill
+        starter_skills = [
+            Skill(
+                user_id=new_user.user_id,
+                skill_name="Python & Cloud Coding",
+                category="Coding",
+                current_level="BEGINNER",
+                target_level="ADVANCED",
+                description="Mastering Python APIs, microservices, and cloud computing deployment."
+            ),
+            Skill(
+                user_id=new_user.user_id,
+                skill_name="Acoustic Guitar",
+                category="Music",
+                current_level="BEGINNER",
+                target_level="INTERMEDIATE",
+                description="Learning chords, fretboard basics, fingerpicking, and daily practice."
+            ),
+            Skill(
+                user_id=new_user.user_id,
+                skill_name="Digital Photography",
+                category="Photography",
+                current_level="BEGINNER",
+                target_level="ADVANCED",
+                description="Exploring manual camera settings, framing, composition, and photo editing."
+            )
+        ]
+        db.add_all(starter_skills)
+        db.commit()
+
         return new_user
 
     @staticmethod

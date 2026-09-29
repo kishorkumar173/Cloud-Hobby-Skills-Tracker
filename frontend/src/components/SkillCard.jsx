@@ -49,7 +49,11 @@ export const SkillCard = ({ skill, onLogPractice, onViewDetails, onDelete }) => 
   }[skill.current_level] || 33;
 
   return (
-    <div className="glass-panel p-5 relative overflow-hidden group flex flex-col justify-between hover:border-slate-700">
+    <div 
+      onClick={() => onViewDetails && onViewDetails(skill)}
+      className="glass-panel p-5 relative overflow-hidden group flex flex-col justify-between hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/10 cursor-pointer transition-all duration-200 transform hover:-translate-y-0.5"
+      title="Click card to view full details and progress"
+    >
       
       <div>
         {/* Header: Icon, Category & Status */}
@@ -115,14 +119,21 @@ export const SkillCard = ({ skill, onLogPractice, onViewDetails, onDelete }) => 
       {/* Action Footer */}
       <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2">
         <button
-          onClick={() => onLogPractice(skill)}
-          className="flex-1 py-2 px-3 rounded-lg gradient-emerald-teal text-white text-xs font-bold hover:brightness-110 active:scale-95 transition-all text-center"
+          onClick={(e) => {
+            e.stopPropagation();
+            onLogPractice(skill);
+          }}
+          className="flex-1 py-2 px-3 rounded-lg gradient-emerald-teal text-white text-xs font-bold hover:brightness-110 active:scale-95 transition-all text-center flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20"
         >
-          + Practice
+          <Clock className="w-3.5 h-3.5" />
+          <span>+ Practice</span>
         </button>
 
         <button
-          onClick={() => onViewDetails(skill)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDetails(skill);
+          }}
           className="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-all"
         >
           Details
@@ -130,7 +141,10 @@ export const SkillCard = ({ skill, onLogPractice, onViewDetails, onDelete }) => 
 
         {onDelete && (
           <button
-            onClick={() => onDelete(skill.skill_id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(skill.skill_id);
+            }}
             className="py-2 px-2.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
             title="Delete Skill"
           >
