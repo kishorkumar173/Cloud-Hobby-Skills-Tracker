@@ -34,7 +34,26 @@ async function request(endpoint, options = {}) {
     }
 
     if (!response.ok) {
-      const errorMsg = data?.detail || data?.message || response.statusText || 'An error occurred';
+      let errorMsg = 'An error occurred';
+      if (typeof data?.detail === 'string') {
+        errorMsg = data.detail;
+      } else if (Array.isArray(data?.detail)) {
+        errorMsg = data.detail.map(d => d.msg || d.message || JSON.stringify(d)).join(', ');
+      } else if (data?.message) {
+        errorMsg = data.message;
+      } else if (typeof data === 'string' && data.trim().length > 0) {
+        try {
+          const parsed = JSON.parse(data);
+          if (typeof parsed?.detail === 'string') errorMsg = parsed.detail;
+          else if (Array.isArray(parsed?.detail)) errorMsg = parsed.detail.map(d => d.msg || d.message).join(', ');
+          else if (parsed?.message) errorMsg = parsed.message;
+          else errorMsg = data;
+        } catch {
+          errorMsg = data;
+        }
+      } else if (response.statusText) {
+        errorMsg = response.statusText;
+      }
       throw new Error(errorMsg);
     }
 
