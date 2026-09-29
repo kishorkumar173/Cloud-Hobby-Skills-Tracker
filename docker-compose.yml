@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hobby_skills_tracker_app
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=sqlite:///./hobby_skills_tracker.db
+      - SECRET_KEY=cloud-docker-secret-key-change-in-production
+      - STORAGE_PROVIDER=local
+      - STORAGE_LOCAL_DIR=./uploads
+      - STORAGE_PUBLIC_BASE_URL=http://localhost:8000/uploads
+    volumes:
+      - hobby_db_data:/app/data
+      - hobby_uploads_data:/app/uploads
+    restart: unless-stopped
+
+volumes:
+  hobby_db_data:
+  hobby_uploads_data:
