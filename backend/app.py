@@ -65,13 +65,21 @@ app.include_router(social_router)
 app.include_router(file_router)
 app.include_router(analytics_router)
 
+from fastapi.responses import FileResponse
+
 # Serve unified static frontend if built
 frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 if frontend_dist.exists():
+    assets_dir = frontend_dist / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
     app.mount("/client", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
 
 @app.get("/", tags=["System"])
 def root():
+    index_file = frontend_dist / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
     return {
         "service": "Online Hobby & Skills Tracker Cloud API",
         "status": "online",
