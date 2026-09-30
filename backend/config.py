@@ -19,7 +19,10 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 1440))
 
     # Database: SQLite locally, or PostgreSQL in cloud
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./hobby_skills_tracker.db")
+    _raw_db_url: str = os.getenv("DATABASE_URL", "sqlite:///./hobby_skills_tracker.db")
+    if _raw_db_url.startswith("postgres://"):
+        _raw_db_url = _raw_db_url.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL: str = _raw_db_url
 
     # Cloud Storage Configuration
     STORAGE_PROVIDER: str = os.getenv("STORAGE_PROVIDER", "local")
