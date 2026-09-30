@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Cloud, Lock, User, Mail, Sparkles, ArrowRight } from 'lucide-react';
+import { Cloud, Lock, User, Mail, Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
 
 export const Register = ({ onSwitchToLogin }) => {
   const { register } = useAuth();
@@ -12,17 +12,46 @@ export const Register = ({ onSwitchToLogin }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  // Auto-generate clean username suggestion when user types their name
+  const handleNameChange = (e) => {
+    const val = e.target.value;
+    setName(val);
+    if (!username || username === name.toLowerCase().replace(/[^a-z0-9_]/g, '')) {
+      const suggested = val.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+      setUsername(suggested);
+    }
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!name.trim() || !username.trim() || !email.trim() || !password) {
+    setError('');
+
+    const trimmedName = name.trim();
+    // Normalize username: trim, lowercase, and convert spaces to underscores
+    const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '_');
+    const trimmedEmail = email.trim().toLowerCase();
+
+    if (!trimmedName || !cleanUsername || !trimmedEmail || !password) {
       setError('Please fill in all required fields');
       return;
     }
 
+    // Client-side email validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError('Please enter a valid email address ending in .com, .edu, etc. (e.g. kishor@gmail.com)');
+      return;
+    }
+
+    // Client-side password validation
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
     setSubmitting(true);
-    setError('');
     try {
-      await register(name.trim(), username.trim(), email.trim(), password, interests.trim());
+      await register(trimmedName, cleanUsername, trimmedEmail, password, interests.trim());
     } catch (err) {
       setError(err.message || 'Registration failed. Try a different username/email.');
     } finally {
@@ -53,8 +82,20 @@ export const Register = ({ onSwitchToLogin }) => {
         {/* Card */}
         <div className="glass-panel p-6 sm:p-8 relative">
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs">
-              {error}
+            <div className="mb-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2.5 animate-fadeIn">
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <span className="font-semibold block">{error}</span>
+                {error.toLowerCase().includes('already') && (
+                  <button
+                    type="button"
+                    onClick={onSwitchToLogin}
+                    className="text-xs font-bold text-indigo-400 hover:text-indigo-300 underline block"
+                  >
+                    Already have this account? Click here to Sign In &rarr;
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
@@ -63,9 +104,9 @@ export const Register = ({ onSwitchToLogin }) => {
               <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Full Name *</label>
               <input
                 type="text"
-                placeholder="e.g. Jordan Lee"
+                placeholder="e.g. Kishor Kumar L"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={handleNameChange}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                 required
               />
@@ -76,7 +117,7 @@ export const Register = ({ onSwitchToLogin }) => {
                 <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Username *</label>
                 <input
                   type="text"
-                  placeholder="jordan_pro"
+                  placeholder="kishor_kumar"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
@@ -88,7 +129,7 @@ export const Register = ({ onSwitchToLogin }) => {
                 <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Email *</label>
                 <input
                   type="email"
-                  placeholder="jordan@example.com"
+                  placeholder="kishor@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
@@ -123,7 +164,7 @@ export const Register = ({ onSwitchToLogin }) => {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3 rounded-xl gradient-purple-pink text-white text-xs font-bold shadow-lg shadow-indigo-500/30 hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2 mt-4"
+              className="w-full py-3 rounded-xl gradient-purple-pink text-white text-xs font-bold shadow-lg shadow-indigo-500/30 hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2 mt-4 cursor-pointer"
             >
               {submitting ? 'Creating Profile...' : 'Complete Registration'}
               <ArrowRight className="w-4 h-4" />

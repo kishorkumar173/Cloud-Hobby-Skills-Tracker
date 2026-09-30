@@ -10,6 +10,7 @@ class AuthService:
 
     @staticmethod
     def register_user(db: Session, name: str, username: str, email: str, password: str, interests: str = "") -> User:
+        import urllib.parse
         username_clean = username.strip().lower()
         email_clean = email.strip().lower()
 
@@ -17,17 +18,18 @@ class AuthService:
         if db.query(User).filter(User.username == username_clean).first():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username is already taken."
+                detail=f"Username '{username.strip()}' is already taken. Please choose another username or sign in."
             )
 
         # Check existing email
         if db.query(User).filter(User.email == email_clean).first():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email is already registered."
+                detail=f"Email '{email.strip()}' is already registered. Please sign in or use another email."
             )
 
         hashed_pw = cloud_auth.get_password_hash(password)
+        encoded_seed = urllib.parse.quote(username_clean)
         new_user = User(
             name=name.strip(),
             username=username_clean,
@@ -35,7 +37,7 @@ class AuthService:
             password_hash=hashed_pw,
             interests=interests or "Coding, Music, Photography",
             bio=f"Hey there! I'm {name.strip()}, tracking my passions on the cloud.",
-            profile_picture="https://api.dicebear.com/7.x/bottts/svg?seed=" + username_clean
+            profile_picture=f"https://api.dicebear.com/7.x/bottts/svg?seed={encoded_seed}"
         )
         db.add(new_user)
         db.commit()
